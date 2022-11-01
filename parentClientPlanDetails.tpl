@@ -88,7 +88,7 @@
 								<div {if $quickQuoted.term_duration < 0} style="display: none" {/if}>
 							  <label class="medium">{$smarty.const.POLICY_TERM}:<span class="asterisk">*</span></label>
 							  <div class="label_right">
-								<select name="term_duration[{$ke}]" class="full quuoteFormField" tabindex="5" {if $fromType eq 'MTA'} readonly="readonly" {/if} >
+								<select name="term_duration[{$ke}]" id= "term_duration_{$ke}" class="full quuoteFormField" tabindex="5" {if $fromType eq 'MTA'} readonly="readonly" {/if} >
 									<option value="">Select Duration</option>
 									{if $post_data.term_duration neq ""}
 										{html_options options = $termYears selected = $quickQuoted.term_duration}
@@ -454,7 +454,7 @@
                     <div>
                       <label class="medium">Policy Term:<span class="asterisk">*</span></label>
                       <div class="label_right">
-                        <select name="term_duration[PLAN_COUNTER]" class="full quuoteFormField" tabindex="5" >
+                        <select name="term_duration[PLAN_COUNTER]" id="term_duration_PLAN_COUNTER" class="full quuoteFormField" tabindex="5" >
                         	<option value="">Select Duration</option>							
 							{html_options options=$termYears selected = $quickQuoted.term_duration}
                         </select>
@@ -674,9 +674,12 @@
 			$(".switchtoage").click(function () {
 				$(".switchtermclass").hide();
 				$(".swichageclass").show();
+
 			});
 			$(".switchtoterm").click(function () {
-				$(".switchtermclass").show();
+				$(".swichageclass").val(0);
+				$(".switchtermclass").show();				
+				
 				$(".swichageclass").hide();
 			});
 			$("#pd_type_of_policy").change(function(){
@@ -748,7 +751,7 @@
 		
 		//Lokenath check age New Quick Quote Call
 		$(".getQuote").click(function () {
-			onQuickGetQuote();	
+			var hasError = false;
 			//$(".policytype").each(function(){
 			$(".allproduct").find(".policytype").each(function(){
 				var sequence = $(this).attr('data-id');
@@ -756,35 +759,43 @@
 				var sum_insured = $('#pd_sum_insured_'+sequence).val();
 				var conver_sumInsu = sum_insured.replace(/,/g, '');
 				const final_sumInsu = conver_sumInsu.replaceAll("GBP", "")
-				alert(final_sumInsu);
+				
 				var client_age = $('#clientAge').val();
+				var policy_term = $('#term_duration_'+sequence).val();
 				var age = $('#term_duration_age_'+sequence).val();
 				var type_of_policy_FH = $('#type_of_policy_FH_'+sequence).is(':checked'); 
     			var type_of_policy_SH = $('#type_of_policy_SH_'+sequence).is(':checked');
+				
+				if(policy_term >0 && age >0 ){
+					alert('Please keep only one either policy terms or upto age');
+				}
 				if(final_sumInsu > 1000000){
-					alert('Sum insured checked')
-					//$('#maxsuminsu_'+sequence).html('Please chose less than or equal to 1000000');
-					
+					//alert('Sum insured checked')
+					$('#maxsuminsu_'+sequence).html('Please chose amount less than or equal to 1000000');
+					hasError = true;
 				}
 				if(age > 0){
 							
-							if(policy_type == 1 &&  (age < 18 || age > 70)){
-								//alert('Please check your first policy upto age greater than 18 or less than or equal 70');
-									$('#ageDisqualifies_'+sequence).html('Please check second policy upto age greater than 18 or less than or equal 70');
-									}
-									if(policy_type == 2 &&  (age < 18 || age > 65)){
-									$('#ageDisqualifies_'+sequence).html('Please check second policy upto age greater than 18 or less than or equal 65');
-									}
-						}				
+						if(policy_type == 1 &&  (age < 18 || age > 70)){
+						//alert('Please check your first policy upto age greater than 18 or less than or equal 70');
+						$('#ageDisqualifies_'+sequence).html('Please check first policy upto age greater than 18 or less than or equal 70');
+						hasError = true;
+						}
+						if(policy_type == 2 &&  (age < 18 || age > 65)){
+						$('#ageDisqualifies_'+sequence).html('Please check second policy upto age greater than 18 or less than or equal 65');
+						hasError = true;
+						}
+					}				
 				if(type_of_policy_FH==true){
 					
 					if(policy_type == 1 && (client_age < 18 || client_age > 70)){
 						// alert('Please check your first policy age greater than 18 or less than or equal 70');												
 						 $('#ageDisqualifies_'+sequence).html('Please check your first policy age greater than 18 or less than or equal 70');
-					}else if(policy_type == 2 && (client_age < 18 || client_age > 65)){
+						 hasError = true;
+						}else if(policy_type == 2 && (client_age < 18 || client_age > 65)){
 						// alert('Please check your first policy age greater than 18 or less than or equal 65 for critical illness')							
-							$('#ageDisqualifies_'+sequence).html('Please check your first policy age greater than 18 or less than or equal 65 for critical illness');
-
+						$('#ageDisqualifies_'+sequence).html('Please check your second policy age greater than 18 or less than or equal 65 for critical illness');
+						hasError = true;		
 						}
 				}
 				if(type_of_policy_FH == true && type_of_policy_SH == true ){
@@ -792,18 +803,21 @@
 					if(policy_type == 1 && (client_age < 18 || client_age > 70)){
 						// alert('Please check your first policy age greater than 18 or less than or equal 70');												
 						$('#ageDisqualifies_'+sequence).html('Please check your first policy age greater than 18 or less than or equal 70');
+						hasError = true;
 					}else if(policy_type == 2 && (client_age < 18 || client_age > 65)){
 						// alert('Please check your first policy age greater than 18 or less than or equal 65 for critical illness')							
-							 $('#ageDisqualifies_'+sequence).html('Please check your first policy age greater than 18 or less than or equal 65 for critical illness');
-
+							 $('#ageDisqualifies_'+sequence).html('Please check your second policy age greater than 18 or less than or equal 65 for critical illness');
+							 hasError = true;
 						}
 					if(policy_type == 1 &&  (additionalClientAge < 18 || additionalClientAge > 70)){
 						//alert('Please check your second policy age greater than 18 or less than or equal 70');
 					$('#ageDisqualifies_'+sequence).html('Please check second policy age greater than 18 or less than or equal 70');
+					hasError = true;
 					}
 					if(policy_type == 2 &&  (additionalClientAge < 18 || additionalClientAge > 65)){
 						//alert('Please check your second policy age greater than 18 or less than or equal 65');
 					$('#ageDisqualifies_'+sequence).html('Please check second policy age greater than 18 or less than or equal 65');
+					hasError = true;
 					}
 				}
 				console.log('sequence=',sequence);
@@ -813,7 +827,10 @@
 				console.log('type_of_policy_SH=',type_of_policy_SH);
 				
   			});
+			if(hasError){
 				return false;
+			}
+				
 			var pd_type_of_cover= $('#pd_type_of_cover').val();
 			
 			if(pd_type_of_cover==''){	
@@ -874,8 +891,8 @@
 				$('#pd_waiver_prem_error').html("");
 			}
 
-			var hasError = false;
-			//onQuickGetQuote();
+			//var hasError = false;
+			onQuickGetQuote();
 			$('#commSacrificePopUp').dialog('close');
 		});
 
